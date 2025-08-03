@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WINS - Launch Sequence</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: #1a0a2c; /* Deep violet background */
+            transition: opacity 0.5s ease-out; /* For fade-out on launch */
+        }
+        #animation-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            outline: none;
+        }
+        #logo-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            opacity: 0;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            pointer-events: none; /* The container itself isn't clickable */
+            transition: opacity 1.5s ease-in-out;
+            width: 90%;
+        }
+        #logo-overlay.visible { /* Class to make the overlay visible */
+            opacity: 1;
+        }
+        .logo-main {
+            font-size: clamp(4rem, 12vw, 9rem);
+            font-weight: 800;
+            letter-spacing: clamp(0.5rem, 1.5vw, 1.5rem);
+            text-shadow: 0 0 30px rgba(236, 179, 255, 0.8), 0 0 50px rgba(198, 81, 255, 0.5);
+        }
+        .tagline {
+            font-size: clamp(0.9rem, 2.2vw, 1.5rem);
+            font-weight: 300;
+            letter-spacing: clamp(0.1rem, 0.3vw, 0.3rem);
+            margin-top: 15px;
+            text-shadow: 0 0 10px rgba(236, 179, 255, 0.7);
+        }
+        
+        /* --- NEW: LAUNCH BUTTON STYLE --- */
+        #launch-button {
+            pointer-events: auto; /* Make the button clickable */
+            opacity: 0; /* Starts hidden */
+            margin-top: 40px;
+            padding: 12px 35px;
+            font-size: clamp(0.8rem, 2vw, 1rem);
+            font-weight: 600;
+            color: white;
+            background-color: rgba(198, 81, 255, 0.25);
+            border: 2px solid rgba(236, 179, 255, 0.8);
+            border-radius: 50px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: opacity 1s ease-in-out, background-color 0.3s, transform 0.3s;
+        }
+        #launch-button.visible { /* Class to make the button appear */
+            opacity: 1;
+        }
+        #launch-button:hover {
+            background-color: rgba(198, 81, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <canvas id="animation-canvas"></canvas>
+    
+    <div id="logo-overlay">
+        <div class="logo-main">WINS</div>
+        <div class="tagline">Women Inspiring New Success</div>
+        <button id="launch-button">Launch</button>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.161.0/build/three.module.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        // --- Basic Scene Setup ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 5;
+
+        const renderer = new THREE.WebGLRenderer({
+            canvas: document.getElementById('animation-canvas'),
+            antialias: true,
+            alpha: true
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        // --- Lighting ---
+        const ambientLight = new THREE.AmbientLight(0x4a148c, 1.0);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xd1c4e9, 1);
+        directionalLight.position.set(0, 5, 5);
+        scene.add(directionalLight);
+
+        // --- 1. The Glass Ceiling ---
+        const glassGeometry = new THREE.PlaneGeometry(15, 15);
+        const glassMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0xffffff,
+            metalness: 0,
+            roughness: 0.05,
+            transmission: 1.0, 
+            thickness: 0.5,
+            ior: 1.5
+        });
+        const glassPlane = new THREE.Mesh(glassGeometry, glassMaterial);
+        scene.add(glassPlane);
+
+        // --- 2. The Energy Projectile ---
+        const energyGeometry = new THREE.SphereGeometry(0.2, 32, 32);
+        const energyMaterial = new THREE.MeshBasicMaterial({ color: 0xc651ff });
+        const energySphere = new THREE.Mesh(energyGeometry, energyMaterial);
+        energySphere.position.set(0, -10, 0); 
+        
+        const pointLight = new THREE.PointLight(0xc651ff, 5, 10);
+        energySphere.add(pointLight);
+        scene.add(energySphere);
+        
+        // --- 3. The Shatter Effect ---
+        const shards = [];
+        const shardCount = 200;
+        const shardMaterial = new THREE.MeshPhysicalMaterial({
+             color: 0xffffff,
+             metalness: 0.2,
+             roughness: 0.1,
+             transmission: 0.9,
+             transparent: true,
+             opacity: 1
+        });
+
+        for (let i = 0; i < shardCount; i++) {
+            const shardGeometry = new THREE.PlaneGeometry(Math.random() * 0.3 + 0.1, Math.random() * 0.3 + 0.1);
+            const shard = new THREE.Mesh(shardGeometry, shardMaterial);
+            shard.position.set(0, 0, 0);
+            shard.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+            shard.visible = false;
+            shards.push(shard);
+            scene.add(shard);
+        }
+
+        // --- Animation Logic ---
+        let hasShattered = false;
+
+        function shatter() {
+            if (hasShattered) return;
+            hasShattered = true;
+
+            scene.remove(glassPlane);
+            scene.remove(energySphere);
+            
+            shards.forEach(shard => {
+                shard.visible = true;
+                const explosionStrength = 4;
+                const duration = 2000 + Math.random() * 1000;
+                const targetX = (Math.random() - 0.5) * explosionStrength;
+                const targetY = (Math.random() - 0.5) * explosionStrength;
+                const targetZ = (Math.random() - 0.5) * explosionStrength;
+                const targetRotX = shard.rotation.x + (Math.random() - 0.5) * Math.PI * 4;
+                const targetRotY = shard.rotation.y + (Math.random() - 0.5) * Math.PI * 4;
+                
+                shard.material.opacity = 1;
+
+                const animateShard = (startTime) => {
+                    const elapsed = performance.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    shard.position.x = THREE.MathUtils.lerp(0, targetX, progress);
+                    shard.position.y = THREE.MathUtils.lerp(0, targetY, progress);
+                    shard.position.z = THREE.MathUtils.lerp(0, targetZ, progress);
+                    shard.rotation.x = THREE.MathUtils.lerp(shard.rotation.x, targetRotX, progress);
+                    shard.rotation.y = THREE.MathUtils.lerp(shard.rotation.y, targetRotY, progress);
+                    shard.material.opacity = 1 - progress;
+                    if (progress < 1) {
+                        requestAnimationFrame(() => animateShard(startTime));
+                    }
+                };
+                animateShard(performance.now());
+            });
+
+            // Reveal the HTML logo and button
+            setTimeout(() => {
+                document.getElementById('logo-overlay').classList.add('visible');
+                // After the logo overlay appears, wait a moment then reveal the button
+                setTimeout(() => {
+                    document.getElementById('launch-button').classList.add('visible');
+                }, 700); // 0.7 second delay
+            }, 500);
+        }
+
+        // --- Main Animation Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (energySphere.position.y < 0) {
+                energySphere.position.y += 0.2;
+            } else if (!hasShattered) {
+                shatter();
+            }
+
+            scene.rotation.y += 0.0005;
+            scene.rotation.x += 0.0003;
+
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+
+        // --- NEW: Event Listener for the Launch Button ---
+        document.getElementById('launch-button').addEventListener('click', () => {
+            // Fade out the entire page for a smooth transition
+            document.body.style.opacity = 0;
+            
+            // Wait for the fade-out to complete, then navigate
+            setTimeout(() => {
+                window.location.href = 'home.html';
+            }, 500); // This duration should match the transition time in the CSS
+        });
+
+
+        // Handle window resizing
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+</body>
+</html>
